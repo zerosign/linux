@@ -481,6 +481,31 @@ static const struct dmi_system_id lg_laptop[] = {
 	{ }
 };
 
+static const struct dmi_system_id lenovo_laptop[] = {
+	{ 
+		.ident = "Lenovo Yoga 7 14ARB7",
+		.matches = {
+			DMI_MATCH(DMI_SYS_VENDOR, "LENOVO"),
+			DMI_MATCH(DMI_PRODUCT_NAME, "82QF"),
+		},
+	},
+	{
+		.ident = "Yoga Slim 7 proX 14ARH7",
+		.matches = { 
+			DMI_MATCH(DMI_SYS_VENDOR, "LENOVO"),
+			DMI_MATCH(DMI_PRODUCT_NAME, "82TL"),
+		},
+	},
+	{ 
+		.ident = "IdeaPad 5 Pro 16ARH7",
+		.matches = {
+			DMI_MATCH(DMI_SYS_VENDOR, "LENOVO"),
+			DMI_MATCH(DMI_PRODUCT_NAME, "825N"),
+		},
+	},
+	{ }
+};
+
 struct irq_override_cmp {
 	const struct dmi_system_id *system;
 	unsigned char irq;
@@ -494,6 +519,13 @@ static const struct irq_override_cmp override_table[] = {
 	{ medion_laptop, 1, ACPI_LEVEL_SENSITIVE, ACPI_ACTIVE_LOW, 0, false },
 	{ asus_laptop, 1, ACPI_LEVEL_SENSITIVE, ACPI_ACTIVE_LOW, 0, false },
 	{ lg_laptop, 1, ACPI_LEVEL_SENSITIVE, ACPI_ACTIVE_LOW, 0, false },
+	{ lenovo_laptop, 1, ACPI_EDGE_SENSITIVE, ACPI_ACTIVE_LOW, 1, false },
+	{ lenovo_laptop, 4, ACPI_EDGE_SENSITIVE, ACPI_ACTIVE_HIGH, 0, false },
+	{ lenovo_laptop, 6, ACPI_EDGE_SENSITIVE, ACPI_ACTIVE_HIGH, 0, false },
+	{ lenovo_laptop, 8, ACPI_EDGE_SENSITIVE, ACPI_ACTIVE_HIGH, 0, false },
+	{ lenovo_laptop, 10, ACPI_EDGE_SENSITIVE, ACPI_ACTIVE_HIGH, 0, false },
+	{ lenovo_laptop, 11, ACPI_EDGE_SENSITIVE, ACPI_ACTIVE_HIGH, 0, false },
+	{ lenovo_laptop, 13, ACPI_EDGE_SENSITIVE, ACPI_ACTIVE_HIGH, 0, false },
 };
 
 static bool acpi_dev_irq_override(u32 gsi, u8 triggering, u8 polarity,
@@ -501,9 +533,11 @@ static bool acpi_dev_irq_override(u32 gsi, u8 triggering, u8 polarity,
 {
 	int i;
 
+	pr_warn("ACPI: IRQ override debug: gsi = %hhd, trigger = %hhd, polarity = %hhd, shareable = %hhd\n", gsi, triggering, polarity, shareable);
+	
 	for (i = 0; i < ARRAY_SIZE(override_table); i++) {
 		const struct irq_override_cmp *entry = &override_table[i];
-
+	
 		if (dmi_check_system(entry->system) &&
 		    entry->irq == gsi &&
 		    entry->triggering == triggering &&
